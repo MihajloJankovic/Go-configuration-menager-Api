@@ -6,6 +6,6 @@ type Config struct {
 }
 
 type ConfigGroup struct {
-	Id string `json:"id"`
+	Id      string             `json:"id"`
 	Configs map[string]*Config `json:"configs"`
 }

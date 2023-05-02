@@ -20,7 +20,8 @@ func main() {
 	router.StrictSlash(true)
 
 	server := postServer{
-		data: map[string]*Config{},
+		dataConfig: map[string]*Config{},
+		data:       map[string]*ConfigGroup{},
 	}
 	router.HandleFunc("/config/", server.createPostHandler).Methods("POST")
 	router.HandleFunc("/configs/", server.getAllHandler).Methods("GET")
@@ -31,7 +32,7 @@ func main() {
 	router.HandleFunc("/configGroups/", server.getAllConfigGroupHandlers).Methods("GET")
 	router.HandleFunc("/configGroup/{id}/", server.getConfigGroupHandler).Methods("GET")
 	router.HandleFunc("/configGroup/{id}/", server.delConfigGroupHandler).Methods("DELETE")
-
+	router.HandleFunc("/configGroup/{config}/{configGroup}/", server.addConfigInConfigGroup).Methods("GET")
 
 	// start server
 	srv := &http.Server{Addr: "0.0.0.0:8000", Handler: router}
