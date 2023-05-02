@@ -2,9 +2,11 @@ package main
 
 import (
 	"errors"
-	"github.com/gorilla/mux"
+	"log"
 	"mime"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type postServer struct {
@@ -27,7 +29,7 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 
 	rt, err := decodeBody(req.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusAccepted)
 		return
 	}
 
@@ -59,11 +61,9 @@ func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 
 func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
-	if v, ok := ts.data[id]; ok {
-		delete(ts.data, id)
-		renderJSON(w, v)
-	} else {
-		err := errors.New("key not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
-	}
+	log.Println(id)
+
+	delete(ts.data, id)
+	renderJSON(w, ts.data[0])
+
 }
