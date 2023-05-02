@@ -13,6 +13,7 @@ type postServer struct {
 	data map[string]*Config
 }
 
+
 func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
@@ -38,6 +39,7 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 	ts.data[id] = rt
 	renderJSON(w, rt)
 }
+
 
 func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
 	allCons := []*Config{}
