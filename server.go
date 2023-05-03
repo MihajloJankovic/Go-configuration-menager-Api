@@ -131,11 +131,19 @@ func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Re
 
 	config := mux.Vars(req)["config"]
 	configGroup := mux.Vars(req)["configGroup"]
+	if configW, ok := ts.dataConfig[config]; ok {
+		if configGroupW, ok := ts.data[configGroup]; ok {
 
-	configW := ts.dataConfig[config]
-	configGroupW := ts.data[configGroup]
-	a := configGroupW.Configs
-	a[config] = configW
+			configGroupW.Configs[config] = configW
+			renderJSON(w, configW)
+		} else {
+			err := errors.New("ConfigGroup id not found")
+			http.Error(w, err.Error(), http.StatusNotFound)
+		}
 
-	renderJSON(w, configGroupW)
+	} else {
+		err := errors.New("Config id not found")
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+
 }
