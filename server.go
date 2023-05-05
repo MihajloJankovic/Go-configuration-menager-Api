@@ -128,12 +128,13 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 }
 
 func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
-
 	config := mux.Vars(req)["config"]
 	configGroup := mux.Vars(req)["configGroup"]
 	if configW, ok := ts.dataConfig[config]; ok {
 		if configGroupW, ok := ts.data[configGroup]; ok {
-
+			if configGroupW.Configs == nil {
+				configGroupW.Configs = make(map[string]*Config)
+			}
 			configGroupW.Configs[config] = configW
 			renderJSON(w, configW)
 		} else {
