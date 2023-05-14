@@ -2,7 +2,7 @@
 FROM golang:latest as builder
 
 # Add Maintainer Info
-LABEL maintainer="Milos Simic <milossimicsimo@gmail.com>"
+LABEL maintainer="Tim 2"
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -31,6 +31,8 @@ WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
+
+EXPOSE 8000
 
 # Command to run the executable
 CMD ["./main"]

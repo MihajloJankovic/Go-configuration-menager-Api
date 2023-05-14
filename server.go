@@ -10,7 +10,7 @@ import (
 )
 
 type postServer struct {
-	dataConfig map[string]*Config
+	dataConfig map[string]map[string]*Config
 	data       map[string]*ConfigGroup
 }
 
@@ -35,15 +35,28 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 	}
 
 	id := createId()
-	rt.Id = id
-	ts.dataConfig[id] = rt
-	renderJSON(w, rt)
+	if len(rt.Id) == 0 {
+		rt.Id = id
+		m := map[string]*Config{}
+		m[rt.Version] = rt
+		ts.dataConfig[id] = m
+		renderJSON(w, rt)
+
+	} else {
+		n := ts.dataConfig[rt.Id]
+		n[rt.Version] = rt
+		renderJSON(w, rt)
+	}
+
 }
 
 func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
 	allCons := []*Config{}
-	for _, v := range ts.dataConfig {
-		allCons = append(allCons, v)
+
+	for i, _ := range ts.dataConfig {
+		for _, b := range ts.dataConfig[i] {
+			allCons = append(allCons, b)
+		}
 	}
 
 	renderJSON(w, allCons)
@@ -51,9 +64,16 @@ func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
 
 func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
-	config, ok := ts.dataConfig[id]
+	version := mux.Vars(req)["version"]
+	mapa, ok := ts.dataConfig[id]
+	config, oke := mapa[version]
 	if !ok {
 		err := errors.New("key not found")
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if !oke {
+		err := errors.New("version not found")
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -62,9 +82,15 @@ func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 
 func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
-	log.Println(id)
+	version := mux.Vars(req)["version"]
 
-	delete(ts.dataConfig, id)
+	mapa := ts.dataConfig[id]
+
+	if len(mapa) > 1 {
+		delete(mapa, version)
+	} else {
+		delete(ts.dataConfig, id)
+	}
 	renderJSON(w, ts.dataConfig[id])
 
 }
@@ -128,22 +154,41 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 }
 
 func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
-	config := mux.Vars(req)["config"]
+
 	configGroup := mux.Vars(req)["configGroup"]
-	if configW, ok := ts.dataConfig[config]; ok {
-		if configGroupW, ok := ts.data[configGroup]; ok {
-			if configGroupW.Configs == nil {
-				configGroupW.Configs = make(map[string]*Config)
-			}
-			configGroupW.Configs[config] = configW
-			renderJSON(w, configW)
-		} else {
-			err := errors.New("ConfigGroup id not found")
-			http.Error(w, err.Error(), http.StatusNotFound)
+	id := mux.Vars(req)["id"]
+	version := mux.Vars(req)["version"]
+	mapa, mm := ts.dataConfig[id]
+	config, oke := mapa[version]
+	if !mm {
+		err := errors.New("key not found")
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if !oke {
+		err := errors.New("version not found")
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if configGroupW, ok := ts.data[configGroup]; ok {
+		if configGroupW.Configs == nil {
+			configGroupW.Configs = make(map[string]map[string]*Config)
+
 		}
 
+		if configGroupW.Configs[id] == nil {
+
+			m := map[string]*Config{}
+			m[version] = config
+			configGroupW.Configs[id] = m
+		} else {
+			z := configGroupW.Configs[id]
+			z[version] = config
+		}
+
+		renderJSON(w, configGroupW)
 	} else {
-		err := errors.New("Config id not found")
+		err := errors.New("ConfigGroup id not found")
 		http.Error(w, err.Error(), http.StatusNotFound)
 	}
 
