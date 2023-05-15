@@ -10,10 +10,17 @@ import (
 )
 
 type postServer struct {
-	dataConfig map[string]map[string]*Config
-	data       map[string]*ConfigGroup
+	dataConfig map[string]map[string]*Config //like database for configs
+	data       map[string]*ConfigGroup	//like database for config groups
 }
 
+// swagger:route POST /config/ config createConfig
+// Add new config
+//
+// responses:
+//  415: ErrorResponse
+//  400: ErrorResponse
+//  201: ResponsePost
 func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
@@ -50,6 +57,11 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 
 }
 
+// swagger:route GET /configs/ config getConfigs
+// Get all configs
+//
+// responses:
+//  200: []ResponsePost
 func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
 	allCons := []*Config{}
 
@@ -62,6 +74,12 @@ func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
 	renderJSON(w, allCons)
 }
 
+// swagger:route GET /config/{id}/{version}/ config getConfigById
+// Get config by ID
+//
+// responses:
+//  404: ErrorResponse
+//  200: ResponsePost
 func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
@@ -80,6 +98,12 @@ func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 	renderJSON(w, config)
 }
 
+// swagger:route DELETE /config/{id}/{version}/ config deleteConfig
+// Delete config
+//
+// responses:
+//  404: ErrorResponse
+//  204: NoContentResponse
 func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
@@ -95,6 +119,13 @@ func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
 
 }
 
+// swagger:route POST /configGroup/ configGroup createConfigGroup
+// Add new config group
+//
+// responses:
+//  415: ErrorResponse
+//  400: ErrorResponse
+//  201: ResponsePost
 func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
@@ -123,6 +154,11 @@ func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.
 	log.Println(rt.Id)
 }
 
+// swagger:route GET /configGroups/ configGroup getConfigGroups
+// Get all config groups
+//
+// responses:
+//  200: []ResponsePost
 func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http.Request) {
 	allTasks := []*ConfigGroup{}
 	for _, v := range ts.data {
@@ -131,6 +167,12 @@ func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http
 	renderJSON(w, allTasks)
 }
 
+// swagger:route GET /configGroup/{id}/ configGroup getConfigGroupById
+// Get config group by ID
+//
+// responses:
+//  404: ErrorResponse
+//  200: ResponsePost
 func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	task, ok := ts.data[id]
@@ -142,6 +184,12 @@ func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Req
 	renderJSON(w, task)
 }
 
+// swagger:route DELETE /configGroup/{id}/ configGroup deleteConfigGroup
+// Delete config group
+//
+// responses:
+//  404: ErrorResponse
+//  204: NoContentResponse
 func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	if v, ok := ts.data[id]; ok {
@@ -153,6 +201,13 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 	}
 }
 
+// swagger:route GET /configGroup/{id}/{version}/{configGroup}/ config, configGroup addConfigInConfigGroup
+// Add config in config group
+//
+// responses:
+//  415: ErrorResponse
+//  400: ErrorResponse
+//  201: ResponsePost
 func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
 
 	configGroup := mux.Vars(req)["configGroup"]
@@ -192,4 +247,8 @@ func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Re
 		http.Error(w, err.Error(), http.StatusNotFound)
 	}
 
+}
+
+func (ts *postServer) swaggerHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./swagger.yaml")
 }

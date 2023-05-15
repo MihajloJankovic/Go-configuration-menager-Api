@@ -1,3 +1,15 @@
+// Post API
+
+//    Title: Post API
+
+//    Schemes: http
+//    Version: 0.0.1
+//    BasePath: /
+
+//    Produces:
+//      - application/json
+
+// swagger:meta
 package main
 
 import (
@@ -32,6 +44,18 @@ func main() {
 	router.HandleFunc("/configGroup/{id}/", server.getConfigGroupHandler).Methods("GET")
 	router.HandleFunc("/configGroup/{id}/", server.delConfigGroupHandler).Methods("DELETE")
 	router.HandleFunc("/configGroup/{id}/{version}/{configGroup}/", server.addConfigInConfigGroup).Methods("GET")
+
+	router.HandleFunc("/swagger.yaml", server.swaggerHandler).Methods("GET")
+
+	// SwaggerUI
+	optionsDevelopers := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
+	developerDocumentationHandler := middleware.SwaggerUI(optionsDevelopers, nil)
+	router.Handle("/docs", developerDocumentationHandler)
+
+	// ReDoc
+	// optionsShared := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	// sharedDocumentationHandler := middleware.Redoc(optionsShared, nil)
+	// router.Handle("/docs", sharedDocumentationHandler)
 
 	// start server
 	srv := &http.Server{Addr: "0.0.0.0:8000", Handler: router}
