@@ -5,16 +5,16 @@ type DeleteRequest struct {
 	// Post ID
 	// in: path
 	Id string `json:"id"`
- }
+}
 
- // swagger:parameters getPostById
- type GetRequest struct {
+// swagger:parameters getPostById
+type GetRequest struct {
 	// Post ID
 	// in: path
 	Id string `json:"id"`
- }
+}
 
- // swagger:parameters post createPost
+// swagger:parameters post createPost
 type RequestPostBody struct {
 	// - name: body
 	//  in: body
@@ -23,5 +23,5 @@ type RequestPostBody struct {
 	//  type: object
 	//     "$ref": "#/definitions/RequestPost"
 	//  required: true
-	Body RequestPost `json:"body"`
- }
+
+}
