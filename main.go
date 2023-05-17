@@ -53,9 +53,9 @@ func main() {
 	developerDocumentationHandler := middleware.SwaggerUI(optionsDevelopers, nil)
 	router.Handle("/docs", developerDocumentationHandler)
 
-	// ReDoc
+	 
 	// optionsShared := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
-	// sharedDocumentationHandler := middleware.Redoc(optionsShared, nil)
+	 //sharedDocumentationHandler := middleware.Redoc(optionsShared, nil)
 	// router.Handle("/docs", sharedDocumentationHandler)
 
 	// start server
