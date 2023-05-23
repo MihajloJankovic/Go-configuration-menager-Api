@@ -2,25 +2,26 @@ package main
 
 import (
 	"errors"
-	"log"
+	ps "github.com/MihajloJankovic/Alati/Dao"
+	pss "github.com/MihajloJankovic/Alati/Dao2"
+	"github.com/gorilla/mux"
 	"mime"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 type postServer struct {
-	dataConfig map[string]map[string]*Config //like database for configs
-	data       map[string]*ConfigGroup	//like database for config groups
+	Dao  *ps.Dao
+	Dao2 *pss.Dao2
 }
 
 // swagger:route POST /config/ config createConfig
 // Add new config
 //
 // responses:
-//  415: ErrorResponse
-//  400: ErrorResponse
-//  201: ResponsePost
+//
+//	415: ErrorResponse
+//	400: ErrorResponse
+//	201: ResponsePost
 func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
@@ -40,20 +41,12 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 		http.Error(w, err.Error(), http.StatusAccepted)
 		return
 	}
-
-	id := createId()
-	if len(rt.Id) == 0 {
-		rt.Id = id
-		m := map[string]*Config{}
-		m[rt.Version] = rt
-		ts.dataConfig[id] = m
-		renderJSON(w, rt)
-
-	} else {
-		n := ts.dataConfig[rt.Id]
-		n[rt.Version] = rt
-		renderJSON(w, rt)
+	config, err := ts.Dao.Create(rt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	renderJSON(w, config)
 
 }
 
@@ -61,38 +54,30 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 // Get all configs
 //
 // responses:
-//  200: []ResponsePost
+//
+//	200: []ResponsePost
 func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
-	allCons := []*Config{}
-
-	for i, _ := range ts.dataConfig {
-		for _, b := range ts.dataConfig[i] {
-			allCons = append(allCons, b)
-		}
+	configs, err := ts.Dao.GetAll()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-
-	renderJSON(w, allCons)
+	renderJSON(w, configs)
 }
 
 // swagger:route GET /config/{id}/{version}/ config getConfigById
 // Get config by ID
 //
 // responses:
-//  404: ErrorResponse
-//  200: ResponsePost
+//
+//	404: ErrorResponse
+//	200: ResponsePost
 func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-	mapa, ok := ts.dataConfig[id]
-	config, oke := mapa[version]
-	if !ok {
-		err := errors.New("key not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-	if !oke {
-		err := errors.New("version not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
+	config, err := ts.Dao.Get(id, version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	renderJSON(w, config)
@@ -102,30 +87,41 @@ func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 // Delete config
 //
 // responses:
-//  404: ErrorResponse
-//  204: NoContentResponse
+//
+//	404: ErrorResponse
+//	204: NoContentResponse
 func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-
-	mapa := ts.dataConfig[id]
-
-	if len(mapa) > 1 {
-		delete(mapa, version)
-	} else {
-		delete(ts.dataConfig, id)
+	msg, err := ts.Dao.Delete(id, version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	renderJSON(w, ts.dataConfig[id])
+	renderJSON(w, msg)
 
+}
+func (ts *postServer) getPostByLabel(w http.ResponseWriter, req *http.Request) {
+	id := mux.Vars(req)["id"]
+	version := mux.Vars(req)["version"]
+	labels := mux.Vars(req)["labels"]
+
+	task, err := ts.Dao.GetPostsByLabels(id, version, labels)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	renderJSON(w, task)
 }
 
 // swagger:route POST /configGroup/ configGroup createConfigGroup
 // Add new config group
 //
 // responses:
-//  415: ErrorResponse
-//  400: ErrorResponse
-//  201: ResponsePost
+//
+//	415: ErrorResponse
+//	400: ErrorResponse
+//	201: ResponsePost
 func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
@@ -146,23 +142,25 @@ func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.
 		return
 	}
 
-	id := createId()
-	rt.Id = id
-	ts.data[id] = rt
-	renderJSON(w, rt)
-
-	log.Println(rt.Id)
+	group, err := ts.Dao2.CreateGroup(rt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	renderJSON(w, group)
 }
 
 // swagger:route GET /configGroups/ configGroup getConfigGroups
 // Get all config groups
 //
 // responses:
-//  200: []ResponsePost
+//
+//	200: []ResponsePost
 func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http.Request) {
-	allTasks := []*ConfigGroup{}
-	for _, v := range ts.data {
-		allTasks = append(allTasks, v)
+	allTasks, err := ts.Dao2.GetAllGroups()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	renderJSON(w, allTasks)
 }
@@ -171,14 +169,14 @@ func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http
 // Get config group by ID
 //
 // responses:
-//  404: ErrorResponse
-//  200: ResponsePost
+//
+//	404: ErrorResponse
+//	200: ResponsePost
 func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
-	task, ok := ts.data[id]
-	if !ok {
-		err := errors.New("id not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
+	task, err := ts.Dao2.GetGroup(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	renderJSON(w, task)
@@ -188,64 +186,33 @@ func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Req
 // Delete config group
 //
 // responses:
-//  404: ErrorResponse
-//  204: NoContentResponse
+//
+//	404: ErrorResponse
+//	204: NoContentResponse
 func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
-	if v, ok := ts.data[id]; ok {
-		delete(ts.data, id)
-		renderJSON(w, v)
-	} else {
-		err := errors.New("id not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
+	version := mux.Vars(req)["version"]
+	msg, err := ts.Dao2.DeleteGroup(id, version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+	renderJSON(w, msg)
 }
 
 // swagger:route GET /configGroup/{id}/{version}/{configGroup}/ config, configGroup addConfigInConfigGroup
 // Add config in config group
 //
 // responses:
-//  415: ErrorResponse
-//  400: ErrorResponse
-//  201: ResponsePost
+//
+//	415: ErrorResponse
+//	400: ErrorResponse
+//	201: ResponsePost
 func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
 
-	configGroup := mux.Vars(req)["configGroup"]
-	id := mux.Vars(req)["id"]
-	version := mux.Vars(req)["version"]
-	mapa, mm := ts.dataConfig[id]
-	config, oke := mapa[version]
-	if !mm {
-		err := errors.New("key not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-	if !oke {
-		err := errors.New("version not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-	if configGroupW, ok := ts.data[configGroup]; ok {
-		if configGroupW.Configs == nil {
-			configGroupW.Configs = make(map[string]map[string]*Config)
-
-		}
-
-		if configGroupW.Configs[id] == nil {
-
-			m := map[string]*Config{}
-			m[version] = config
-			configGroupW.Configs[id] = m
-		} else {
-			z := configGroupW.Configs[id]
-			z[version] = config
-		}
-
-		renderJSON(w, configGroupW)
-	} else {
-		err := errors.New("ConfigGroup id not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
-	}
+	//configGroup := mux.Vars(req)["configGroup"]
+	//	id := mux.Vars(req)["id"]
+	//	version := mux.Vars(req)["version"]
 
 }
 
