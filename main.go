@@ -14,6 +14,8 @@ package main
 
 import (
 	"context"
+	ps "github.com/MihajloJankovic/Alati/Dao"
+	pss "github.com/MihajloJankovic/Alati/Dao2"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"log"
@@ -30,15 +32,21 @@ func main() {
 
 	router := mux.NewRouter()
 	router.StrictSlash(true)
-
-	server := postServer{
-		dataConfig: make(map[string]map[string]*Config),
-		data:       make(map[string]*ConfigGroup),
+	Dao, err := ps.New()
+	if err != nil {
+		log.Fatal(err)
 	}
+	Dao2, err := pss.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server := postServer{Dao: Dao, Dao2: Dao2}
 	router.HandleFunc("/config/", server.createPostHandler).Methods("POST")
 	router.HandleFunc("/configs/", server.getAllHandler).Methods("GET")
 	router.HandleFunc("/config/{id}/{version}/", server.getPostHandler).Methods("GET")
 	router.HandleFunc("/config/{id}/{version}/", server.delPostHandler).Methods("DELETE")
+	router.HandleFunc("/config/{id}/{version}/{labels}", server.getPostByLabel).Methods("GET")
 
 	router.HandleFunc("/configGroup/", server.createConfigGroupHandler).Methods("POST")
 	router.HandleFunc("/configGroups/", server.getAllConfigGroupHandlers).Methods("GET")
@@ -53,9 +61,8 @@ func main() {
 	developerDocumentationHandler := middleware.SwaggerUI(optionsDevelopers, nil)
 	router.Handle("/docs", developerDocumentationHandler)
 
-	 
 	// optionsShared := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
-	 //sharedDocumentationHandler := middleware.Redoc(optionsShared, nil)
+	//sharedDocumentationHandler := middleware.Redoc(optionsShared, nil)
 	// router.Handle("/docs", sharedDocumentationHandler)
 
 	// start server

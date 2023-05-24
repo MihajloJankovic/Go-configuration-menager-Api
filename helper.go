@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/MihajloJankovic/Alati/Dao"
 	"io"
 	"net/http"
 
@@ -14,22 +15,22 @@ func StreamToByte(stream io.Reader) []byte {
 	buf.ReadFrom(stream)
 	return buf.Bytes()
 }
-func decodeBody(r io.Reader) (*Config, error) {
+func decodeBody(r io.Reader) (*poststore.Config, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 
-	var rt Config
+	var rt poststore.Config
 	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
 		return nil, err
 	}
 	return &rt, nil
 }
 
-func decodeGroupBody(r io.Reader) (*ConfigGroup, error) {
+func decodeGroupBody(r io.Reader) (*poststore.ConfigGroup, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 
-	var rt ConfigGroup
+	var rt poststore.ConfigGroup
 	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
 		return nil, err
 	}

@@ -1,15 +1,15 @@
-package main
+package poststore
 
 // swagger:model Config
 type Config struct {
 
 	// Id of the config
 	// in: string
-	Id      string            `json:"id"`
+	Id string `json:"id"`
 
 	// Version of the config
 	// in: string
-	Version string            `json:"version"`
+	Version string `json:"version"`
 
 	// Entries of the config
 	// in: map[string]string
@@ -21,7 +21,7 @@ type ConfigGroup struct {
 
 	// Id of the configGroup
 	// in: string
-	Id      string                        `json:"id"`
+	Id string `json:"id"`
 
 	// Configs of the configGroup
 	// in map[string]map[string]*Config
