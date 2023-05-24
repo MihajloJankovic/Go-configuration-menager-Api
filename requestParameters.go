@@ -1,25 +1,28 @@
 package main
 
 // swagger:parameters deleteConfig
-type DeleteRequest struct {
+type DeleteConfig struct {
 	// Post ID
 	// in: path
 	Id string `json:"id"`
 }
 
-// swagger:parameters getPostById
-type GetRequest struct {
+// swagger:parameters deleteConfigGroup
+type DeleteConfigGroup struct {
 	// Post ID
 	// in: path
 	Id string `json:"id"`
 }
 
-<<<<<<< Updated upstream
-// swagger:parameters post createPost
-type RequestPostBody struct {
-=======
- // swagger:parameters post createConfigGroup
-type RequestConfigGroupBody struct {
+// swagger:parameters getConfigById
+type GetConfigById struct {
+	// Post ID
+	// in: path
+	Id string `json:"id"`
+}
+
+ // swagger:parameters createConfigGroup
+type CreateConfigGroup struct {
 	// - name: body
 	//  in: body
 	//  description: name and status
@@ -30,8 +33,8 @@ type RequestConfigGroupBody struct {
 	Body RequestPost `json:"body"`
  }
 
-// swagger:parameters post createConfig
-type RequestConfigBody struct {
+// swagger:parameters createConfig
+type CreateConfig struct {
 	// - name: body
 	//  in: body
 	//  description: name and status
@@ -42,9 +45,8 @@ type RequestConfigBody struct {
 	Body RequestPost `json:"body"`
  }
 
- // swagger:parameters post getConfigs
-type RequestConfigBody struct {
->>>>>>> Stashed changes
+ // swagger:parameters getConfigs
+type GetConfigs struct {
 	// - name: body
 	//  in: body
 	//  description: name and status
@@ -54,3 +56,34 @@ type RequestConfigBody struct {
 	//  required: true
 
 }
+
+ // swagger:parameters getConfigGroups
+type GetConfigGroups struct {
+	// - name: body
+	//  in: body
+	//  description: name and status
+	//  schema:
+	//  type: object
+	//     "$ref": "#/definitions/RequestPost"
+	//  required: true
+
+}
+
+// swagger:parameters getConfigGroupById
+type GetConfigGroupById struct {
+	// Post ID
+	// in: path
+	Id string `json:"id"`
+}
+
+// swagger:parameters addConfigInConfigGroup
+type AddConfigInConfigGroup struct {
+	// - name: body
+	//  in: body
+	//  description: name and status
+	//  schema:
+	//  type: object
+	//     "$ref": "#/definitions/RequestPost"
+	//  required: true
+	Body RequestPost `json:"body"`
+ }
