@@ -15,22 +15,22 @@ func StreamToByte(stream io.Reader) []byte {
 	buf.ReadFrom(stream)
 	return buf.Bytes()
 }
-func decodeBody(r io.Reader) (*poststore.Config, error) {
+func decodeBody(r io.Reader) (*Dao.Config, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 
-	var rt poststore.Config
+	var rt Dao.Config
 	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
 		return nil, err
 	}
 	return &rt, nil
 }
 
-func decodeGroupBody(r io.Reader) (*poststore.ConfigGroup, error) {
+func decodeGroupBody(r io.Reader) (*Dao.ConfigGroup, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 
-	var rt poststore.ConfigGroup
+	var rt Dao.ConfigGroup
 	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
 		return nil, err
 	}

@@ -6,20 +6,18 @@ import (
 )
 
 const (
-	posts       = "posts/%s/%s"
-	postsLabels = "posts/%s/%s/%s"
-	all         = "posts"
+	posts  = "key"
+	postid = "key/%s"
 )
 
-func generateKey(string) string {
+func generateKey() (string, string) {
 	id := uuid.New().String()
 
-	return fmt.Sprintf(posts, id)
+	return fmt.Sprintf(postid, id), id
 
 }
 
 func constructKey(id string) string {
 
-	return fmt.Sprintf(all, id)
-
+	return fmt.Sprintf(postid, id)
 }

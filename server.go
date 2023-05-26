@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
 	"github.com/gorilla/mux"
@@ -211,9 +212,9 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 //	201: ResponsePost
 func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
 
-	configGroup := mux.Vars(req)["configGroup"]
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
+	configGroup := mux.Vars(req)["configGroup"]
 
 	config, err := ts.Dao.Get(id, version)
 	if err != nil {
@@ -226,13 +227,14 @@ func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Re
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	_ = append(task.Configs, config)
-	//config, err := ts.Dao2.Save(configs)
-	//	if err != nil {
-	//		http.Error(w, err.Error(), http.StatusBadRequest)
-	//	return
-	//	}
-	renderJSON(w, task)
+	task.Configs = append(task.Configs, config)
+	fmt.Println(task.Configs)
+	grupas, err := ts.Dao2.SaveGroup(task)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	renderJSON(w, grupas)
 
 }
 

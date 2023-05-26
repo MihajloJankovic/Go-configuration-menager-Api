@@ -38,20 +38,18 @@ func (pss *Dao2) GetGroup(id string) (*ps.ConfigGroup, error) {
 
 	post := &ps.ConfigGroup{}
 	for _, pair := range data {
-		post := ps.ConfigGroup{}
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
 			return nil, err
 		}
 
 	}
-
 	return post, nil
 }
 
 func (pss *Dao2) GetAllGroups() ([]*ps.ConfigGroup, error) {
 	kv := pss.cli.KV()
-	data, _, err := kv.List(all, nil)
+	data, _, err := kv.List(posts, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +80,8 @@ func (pss *Dao2) DeleteGroup(id string, version string) (map[string]string, erro
 func (pss *Dao2) CreateGroup(post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
 	kv := pss.cli.KV()
 
-	rid := generateKey(post.Id)
-	post.Id = rid
+	rid, a := generateKey()
+	post.Id = a
 
 	data, err := json.Marshal(post)
 	if err != nil {
@@ -91,6 +89,22 @@ func (pss *Dao2) CreateGroup(post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
 	}
 
 	p := &api.KVPair{Key: rid, Value: data}
+	_, err = kv.Put(p, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
+}
+func (pss *Dao2) SaveGroup(post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
+	kv := pss.cli.KV()
+
+	data, err := json.Marshal(post)
+	if err != nil {
+		return nil, err
+	}
+
+	p := &api.KVPair{Key: constructKey(post.Id), Value: data}
 	_, err = kv.Put(p, nil)
 	if err != nil {
 		return nil, err
@@ -116,6 +130,7 @@ func (pss *Dao2) GetPostsByLabels(id string, version string, labels string) ([]*
 			return nil, err
 		}
 		posts = append(posts, post)
+
 	}
 
 	if err != nil {
