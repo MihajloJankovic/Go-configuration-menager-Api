@@ -1,4 +1,4 @@
-package poststore
+package Dao2
 
 import (
 	"encoding/json"
@@ -28,7 +28,7 @@ func New() (*Dao2, error) {
 	}, nil
 }
 
-func (pss *Dao2) GetGroup(id string) ([]*ConfigGroup, error) {
+func (pss *Dao2) GetGroup(id string) (*ps.ConfigGroup, error) {
 	kv := pss.cli.KV()
 
 	data, _, err := kv.List(constructKey(id), nil)
@@ -36,28 +36,29 @@ func (pss *Dao2) GetGroup(id string) ([]*ConfigGroup, error) {
 		return nil, err
 	}
 
-	posts := []*ConfigGroup{}
+	post := &ps.ConfigGroup{}
 	for _, pair := range data {
-		post := &ConfigGroup{}
+		post := ps.ConfigGroup{}
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
 			return nil, err
 		}
-		posts = append(posts, post)
+
 	}
-	return posts, nil
+
+	return post, nil
 }
 
-func (pss *Dao2) GetAllGroups() ([]*ConfigGroup, error) {
+func (pss *Dao2) GetAllGroups() ([]*ps.ConfigGroup, error) {
 	kv := pss.cli.KV()
 	data, _, err := kv.List(all, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	posts := []*ConfigGroup{}
+	posts := []*ps.ConfigGroup{}
 	for _, pair := range data {
-		post := &ConfigGroup{}
+		post := &ps.ConfigGroup{}
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
 			return nil, err
@@ -98,18 +99,18 @@ func (pss *Dao2) CreateGroup(post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
 	return post, nil
 }
 
-func (ps *Dao2) GetPostsByLabels(id string, version string, labels string) ([]*ConfigGroup, error) {
-	kv := ps.cli.KV()
+func (pss *Dao2) GetPostsByLabels(id string, version string, labels string) ([]*ps.ConfigGroup, error) {
+	kv := pss.cli.KV()
 
 	data, _, err := kv.List(constructKey(id), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	posts := []*ConfigGroup{}
+	posts := []*ps.ConfigGroup{}
 
 	for _, pair := range data {
-		post := &ConfigGroup{}
+		post := &ps.ConfigGroup{}
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
 			return nil, err

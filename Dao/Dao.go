@@ -1,4 +1,4 @@
-package poststore
+package Dao
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ func New() (*Dao, error) {
 	}, nil
 }
 
-func (ps *Dao) Get(id string, version string) ([]*Config, error) {
+func (ps *Dao) Get(id string, version string) (*Config, error) {
 	kv := ps.cli.KV()
 
 	data, _, err := kv.List(constructKey(id, version, ""), nil)
@@ -35,16 +35,15 @@ func (ps *Dao) Get(id string, version string) ([]*Config, error) {
 		return nil, err
 	}
 
-	posts := []*Config{}
+	post := &Config{}
 	for _, pair := range data {
-		post := &Config{}
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
 			return nil, err
 		}
-		posts = append(posts, post)
+
 	}
-	return posts, nil
+	return post, nil
 }
 
 func (ps *Dao) GetAll() ([]*Config, error) {

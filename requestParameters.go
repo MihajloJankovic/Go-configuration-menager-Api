@@ -1,5 +1,7 @@
 package main
 
+import s "github.com/MihajloJankovic/Alati/Dao"
+
 // swagger:parameters deleteConfig
 type DeleteConfig struct {
 	// Post ID
@@ -21,7 +23,7 @@ type GetConfigById struct {
 	Id string `json:"id"`
 }
 
- // swagger:parameters createConfigGroup
+// swagger:parameters createConfigGroup
 type CreateConfigGroup struct {
 	// - name: body
 	//  in: body
@@ -30,8 +32,8 @@ type CreateConfigGroup struct {
 	//  type: object
 	//     "$ref": "#/definitions/RequestPost"
 	//  required: true
-	Body RequestPost `json:"body"`
- }
+	Body s.Config `json:"body"`
+}
 
 // swagger:parameters createConfig
 type CreateConfig struct {
@@ -42,10 +44,10 @@ type CreateConfig struct {
 	//  type: object
 	//     "$ref": "#/definitions/RequestPost"
 	//  required: true
-	Body RequestPost `json:"body"`
- }
+	Body s.Config `json:"body"`
+}
 
- // swagger:parameters getConfigs
+// swagger:parameters getConfigs
 type GetConfigs struct {
 	// - name: body
 	//  in: body
@@ -57,7 +59,7 @@ type GetConfigs struct {
 
 }
 
- // swagger:parameters getConfigGroups
+// swagger:parameters getConfigGroups
 type GetConfigGroups struct {
 	// - name: body
 	//  in: body
@@ -85,5 +87,5 @@ type AddConfigInConfigGroup struct {
 	//  type: object
 	//     "$ref": "#/definitions/RequestPost"
 	//  required: true
-	Body RequestPost `json:"body"`
- }
+	Body s.Config `json:"body"`
+}

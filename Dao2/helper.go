@@ -1,4 +1,4 @@
-package poststore
+package Dao2
 
 import (
 	"fmt"
@@ -20,6 +20,6 @@ func generateKey(string) string {
 
 func constructKey(id string) string {
 
-	return fmt.Sprintf(posts, id)
+	return fmt.Sprintf(all, id)
 
 }

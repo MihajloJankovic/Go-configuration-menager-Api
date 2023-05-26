@@ -179,6 +179,7 @@ func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Req
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	renderJSON(w, task)
 }
 
@@ -210,9 +211,28 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 //	201: ResponsePost
 func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
 
-	//configGroup := mux.Vars(req)["configGroup"]
-	//	id := mux.Vars(req)["id"]
-	//	version := mux.Vars(req)["version"]
+	configGroup := mux.Vars(req)["configGroup"]
+	id := mux.Vars(req)["id"]
+	version := mux.Vars(req)["version"]
+
+	config, err := ts.Dao.Get(id, version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	task, err := ts.Dao2.GetGroup(configGroup)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	_ = append(task.Configs, config)
+	//config, err := ts.Dao2.Save(configs)
+	//	if err != nil {
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//	return
+	//	}
+	renderJSON(w, task)
 
 }
 

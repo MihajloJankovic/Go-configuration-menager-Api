@@ -4,7 +4,7 @@ paths:
         post:
             description: Add new config
             operationId: createConfig
-              parameters:
+            parameters:
                 - description: 'name: body'
                   in: body
                   name: body
@@ -25,18 +25,12 @@ paths:
             description: Delete config
             operationId: deleteConfig
             parameters:
-                - description: Post 
+                - description: Post ID
                   in: path
                   name: id
                   required: true
                   type: string
                   x-go-name: Id
-                  - description: Post ID
-                  in: path
-                  name: version
-                  required: true
-                  type: string
-                  x-go-name: version
             responses:
                 "204":
                     $ref: '#/responses/NoContentResponse'
@@ -47,7 +41,8 @@ paths:
         get:
             description: Get config by ID
             operationId: getConfigById
-              - description: Post 
+            parameters:
+                - description: Post ID
                   in: path
                   name: id
                   required: true
@@ -64,7 +59,7 @@ paths:
         post:
             description: Add new config group
             operationId: createConfigGroup
-             parameters:
+            parameters:
                 - description: 'name: body'
                   in: body
                   name: body
@@ -84,7 +79,8 @@ paths:
         delete:
             description: Delete config group
             operationId: deleteConfigGroup
-              - description: Post 
+            parameters:
+                - description: Post ID
                   in: path
                   name: id
                   required: true
@@ -100,7 +96,8 @@ paths:
         get:
             description: Get config group by ID
             operationId: getConfigGroupById
-              - description: Post 
+            parameters:
+                - description: Post ID
                   in: path
                   name: id
                   required: true

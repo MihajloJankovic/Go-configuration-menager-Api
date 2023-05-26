@@ -1,4 +1,4 @@
-package poststore
+package Dao
 
 // swagger:model Config
 type Config struct {
@@ -13,9 +13,7 @@ type Config struct {
 	// in: string
 	Version string `json:"version"`
 
-	// Entries of the config
-	// in: map[string]string
-	//	Entries map[string]string `json:"entries"`
+	Entries map[string]string `json:"entries"`
 }
 
 // swagger: model ConfigGroup
@@ -27,5 +25,5 @@ type ConfigGroup struct {
 
 	// Configs of the configGroup
 	// in map[string]map[string]*Config
-	Configs map[string]map[string]*Config `json:"configs"`
+	Configs []*Config `json:"configs"`
 }
