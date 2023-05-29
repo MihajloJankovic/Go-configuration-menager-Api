@@ -15,8 +15,8 @@ package main
 import (
 	"context"
 	ps "github.com/MihajloJankovic/Alati/Dao"
-	pm "/usr/local/go/src/Alati/prometheus"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
+	pm "github.com/MihajloJankovic/Alati/prometheus"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"log"
