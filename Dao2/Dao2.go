@@ -1,9 +1,11 @@
 package Dao2
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
+	tracer "github.com/MihajloJankovic/Alati/tracer"
 	"github.com/hashicorp/consul/api"
 	"os"
 )
@@ -28,11 +30,15 @@ func New() (*Dao2, error) {
 	}, nil
 }
 
-func (pss *Dao2) GetGroup(id string) (*ps.ConfigGroup, error) {
+func (pss *Dao2) GetGroup(ctx context.Context, id string) (*ps.ConfigGroup, error) {
+	span := tracer.StartSpanFromContext(ctx, "GetGroup")
+	defer span.Finish()
+
 	kv := pss.cli.KV()
 
 	data, _, err := kv.List(constructKey(id), nil)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
@@ -40,6 +46,7 @@ func (pss *Dao2) GetGroup(id string) (*ps.ConfigGroup, error) {
 	for _, pair := range data {
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
+			tracer.LogError(span, err)
 			return nil, err
 		}
 
@@ -47,10 +54,14 @@ func (pss *Dao2) GetGroup(id string) (*ps.ConfigGroup, error) {
 	return post, nil
 }
 
-func (pss *Dao2) GetAllGroups() ([]*ps.ConfigGroup, error) {
+func (pss *Dao2) GetAllGroups(ctx context.Context) ([]*ps.ConfigGroup, error) {
+	span := tracer.StartSpanFromContext(ctx, "GetAllGroups")
+	defer span.Finish()
+
 	kv := pss.cli.KV()
 	data, _, err := kv.List(posts, nil)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
@@ -59,6 +70,7 @@ func (pss *Dao2) GetAllGroups() ([]*ps.ConfigGroup, error) {
 		post := &ps.ConfigGroup{}
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
+			tracer.LogError(span, err)
 			return nil, err
 		}
 		posts = append(posts, post)
@@ -67,17 +79,24 @@ func (pss *Dao2) GetAllGroups() ([]*ps.ConfigGroup, error) {
 	return posts, nil
 }
 
-func (pss *Dao2) DeleteGroup(id string, version string) (map[string]string, error) {
+func (pss *Dao2) DeleteGroup(ctx context.Context, id string, version string) (map[string]string, error) {
+	span := tracer.StartSpanFromContext(ctx, "DeleteGroup")
+	defer span.Finish()
+
 	kv := pss.cli.KV()
 	_, err := kv.DeleteTree(constructKey(id), nil)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
 	return map[string]string{"Deleted": id}, nil
 }
 
-func (pss *Dao2) CreateGroup(post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
+func (pss *Dao2) CreateGroup(ctx context.Context, post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
+	span := tracer.StartSpanFromContext(ctx, "CreateGroup")
+	defer span.Finish()
+
 	kv := pss.cli.KV()
 
 	rid, a := generateKey()
@@ -85,39 +104,50 @@ func (pss *Dao2) CreateGroup(post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
 
 	data, err := json.Marshal(post)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
 	p := &api.KVPair{Key: rid, Value: data}
 	_, err = kv.Put(p, nil)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
 	return post, nil
 }
-func (pss *Dao2) SaveGroup(post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
+func (pss *Dao2) SaveGroup(ctx context.Context, post *ps.ConfigGroup) (*ps.ConfigGroup, error) {
+	span := tracer.StartSpanFromContext(ctx, "SaveGroup")
+	defer span.Finish()
+
 	kv := pss.cli.KV()
 
 	data, err := json.Marshal(post)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
 	p := &api.KVPair{Key: constructKey(post.Id), Value: data}
 	_, err = kv.Put(p, nil)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
 	return post, nil
 }
 
-func (pss *Dao2) GetPostsByLabels(id string, version string, labels string) ([]*ps.ConfigGroup, error) {
+func (pss *Dao2) GetPostsByLabels(ctx context.Context, id string, version string, labels string) ([]*ps.ConfigGroup, error) {
+	span := tracer.StartSpanFromContext(ctx, "GetPostsByLabels")
+	defer span.Finish()
+
 	kv := pss.cli.KV()
 
 	data, _, err := kv.List(constructKey(id), nil)
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
@@ -127,6 +157,7 @@ func (pss *Dao2) GetPostsByLabels(id string, version string, labels string) ([]*
 		post := &ps.ConfigGroup{}
 		err = json.Unmarshal(pair.Value, post)
 		if err != nil {
+			tracer.LogError(span, err)
 			return nil, err
 		}
 		posts = append(posts, post)
@@ -134,6 +165,7 @@ func (pss *Dao2) GetPostsByLabels(id string, version string, labels string) ([]*
 	}
 
 	if err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 
