@@ -1,10 +1,11 @@
 package Dao
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/consul/api"
 	tracer "github.com/MihajloJankovic/Alati/tracer"
+	"github.com/hashicorp/consul/api"
 	"os"
 )
 

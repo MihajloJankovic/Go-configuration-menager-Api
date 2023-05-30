@@ -129,6 +129,7 @@ func Count(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter,
 		httpHits.Inc()
 		f(w, r) // original function call
 	}
+}
 
 func CountCreateConfig(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

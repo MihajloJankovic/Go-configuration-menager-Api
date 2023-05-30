@@ -1,11 +1,12 @@
 package Dao2
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
-	"github.com/hashicorp/consul/api"
 	tracer "github.com/MihajloJankovic/Alati/tracer"
+	"github.com/hashicorp/consul/api"
 	"os"
 )
 
