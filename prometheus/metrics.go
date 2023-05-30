@@ -124,6 +124,12 @@ func MetricsHandler() http.Handler {
 	return promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})
 }
 
+func Count(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		httpHits.Inc()
+		f(w, r) // original function call
+	}
+
 func CountCreateConfig(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()

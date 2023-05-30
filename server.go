@@ -5,6 +5,9 @@ import (
 	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
+	tracer "github.com/MihajloJankovic/Alati/tracer"
+	opentracing "github.com/opentracing/opentracing-go"
+	"io"
 	"github.com/gorilla/mux"
 	"mime"
 	"net/http"
@@ -13,6 +16,8 @@ import (
 type postServer struct {
 	Dao  *ps.Dao
 	Dao2 *pss.Dao2
+	tracer opentracing.Tracer
+	closer io.Closer
 }
 
 // swagger:route POST /config/ config createConfig

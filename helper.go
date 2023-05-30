@@ -10,36 +10,51 @@ import (
 	"github.com/google/uuid"
 )
 
-func StreamToByte(stream io.Reader) []byte {
+func StreamToByte(ctx context.Context, stream io.Reader) []byte {
+	span := tracer.StartSpanFromContext(ctx, "StreamToByte")
+	defer span.Finish()
+
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(stream)
 	return buf.Bytes()
 }
-func decodeBody(r io.Reader) (*Dao.Config, error) {
+func decodeBody(ctx context.Context, r io.Reader) (*Dao.Config, error) {
+	span := tracer.StartSpanFromContext(ctx, "decodeBody")
+	defer span.Finish()
+
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 
 	var rt Dao.Config
 	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 	return &rt, nil
 }
 
-func decodeGroupBody(r io.Reader) (*Dao.ConfigGroup, error) {
+func decodeGroupBody(ctx context.Context, r io.Reader) (*Dao.ConfigGroup, error) {
+	span := tracer.StartSpanFromContext(ctx, "decodeGroupBody")
+	defer span.Finish()
+
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
 
 	var rt Dao.ConfigGroup
 	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
+		tracer.LogError(span, err)
 		return nil, err
 	}
 	return &rt, nil
 }
 
-func renderJSON(w http.ResponseWriter, v interface{}) {
+func renderJSON(ctx context.Context, w http.ResponseWriter, v interface{}) {
+	span := tracer.StartSpanFromContext(ctx, "renderJSON") //moguce da ide decodeBody opet pod navodnike
+	defer span.Finish()
+
 	js, err := json.Marshal(v)
 	if err != nil {
+		tracer.LogError(span, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -48,6 +63,9 @@ func renderJSON(w http.ResponseWriter, v interface{}) {
 	w.Write(js)
 }
 
-func createId() string {
+func createId(ctx context.Context) string {
+	span := tracer.StartSpanFromContext(ctx, "createId")
+	defer span.Finish()
+
 	return uuid.New().String()
 }

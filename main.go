@@ -59,6 +59,9 @@ func main() {
 
 	router.Path("/metrics").Handler(pm.MetricsHandler())
 
+	//show Traces UI on http://localhost:16686
+	//show Metrics UI on show UI on localhost:9090
+
 	// SwaggerUI
 	optionsDevelopers := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
 	developerDocumentationHandler := middleware.SwaggerUI(optionsDevelopers, nil)
