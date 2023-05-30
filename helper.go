@@ -6,9 +6,40 @@ import (
 	"github.com/MihajloJankovic/Alati/Dao"
 	"io"
 	"net/http"
-
+	ps "github.com/MihajloJankovic/Alati/Dao"
+	pss "github.com/MihajloJankovic/Alati/Dao2"
+	tracer "github.com/MihajloJankovic/Alati/tracer"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/google/uuid"
 )
+
+func NewConfigServer() (*postServer, error) {
+	store, err := ps.New()
+	if err != nil {
+		return nil, err
+	}
+
+	tracer, closer := tracer.Init(name)
+	opentracing.SetGlobalTracer(tracer)
+	return &postServer{
+		store:  store,
+		Keys:   make(map[string]string),
+		tracer: tracer,
+		closer: closer,
+	}, nil
+}
+
+func (s *postServer) GetTracer() opentracing.Tracer {
+	return s.tracer
+}
+
+func (s *postServer) GetCloser() io.Closer {
+	return s.closer
+}
+
+func (s *postServer) CloseTracer() error {
+	return s.closer.Close()
+}
 
 func StreamToByte(ctx context.Context, stream io.Reader) []byte {
 	span := tracer.StartSpanFromContext(ctx, "StreamToByte")
