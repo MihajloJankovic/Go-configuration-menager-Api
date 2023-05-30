@@ -42,7 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := postServer{Dao: Dao, Dao2: Dao2}
+	server := postServer{Dao: Dao, Dao2: Dao2, keys: make(map[string]string), keys2: make(map[string]string)}
 	router.HandleFunc("/config/", pm.CountCreateConfig(server.createPostHandler)).Methods("POST")
 	router.HandleFunc("/configs/", pm.CountGetAllConfig(server.getAllHandler)).Methods("GET")
 	router.HandleFunc("/config/{id}/{version}/", pm.CountGetConfig(server.getPostHandler)).Methods("GET")
