@@ -5,14 +5,24 @@ import (
 	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
+	tracer "github.com/MihajloJankovic/Alati/tracer"
+	opentracing "github.com/opentracing/opentracing-go"
+	"io"
 	"github.com/gorilla/mux"
 	"mime"
 	"net/http"
 )
 
 type postServer struct {
+
+	keys  map[string]string
+	keys2 map[string]string
+
 	Dao  *ps.Dao
 	Dao2 *pss.Dao2
+	tracer opentracing.Tracer
+	closer io.Closer
+
 }
 
 // swagger:route POST /config/ config createConfig
@@ -25,12 +35,21 @@ type postServer struct {
 //	201: ResponsePost
 func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
+	key := req.Header.Get("key")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	v := ts.keys[key]
+	if v == "" {
+		ts.keys[key] = key
+
+	} else {
+		http.Error(w, "Already Created", http.StatusAccepted)
+		return
+	}
 	if mediatype != "application/json" {
 		err := errors.New("Expect application/json Content-Type")
 		http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
@@ -136,7 +155,15 @@ func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.
 		http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
 		return
 	}
+	key := req.Header.Get("key")
+	v := ts.keys2[key]
+	if v == "" {
+		ts.keys2[key] = key
 
+	} else {
+		http.Error(w, "Already Created", http.StatusAccepted)
+		return
+	}
 	rt, err := decodeGroupBody(req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

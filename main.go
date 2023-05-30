@@ -16,6 +16,7 @@ import (
 	"context"
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
+	pm "github.com/MihajloJankovic/Alati/prometheus"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"log"
@@ -41,20 +42,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := postServer{Dao: Dao, Dao2: Dao2}
-	router.HandleFunc("/config/", server.createPostHandler).Methods("POST")
-	router.HandleFunc("/configs/", server.getAllHandler).Methods("GET")
-	router.HandleFunc("/config/{id}/{version}/", server.getPostHandler).Methods("GET")
-	router.HandleFunc("/config/{id}/{version}/", server.delPostHandler).Methods("DELETE")
-	router.HandleFunc("/config/{id}/{version}/{labels}", server.getPostByLabel).Methods("GET")
+	server := postServer{Dao: Dao, Dao2: Dao2, keys: make(map[string]string), keys2: make(map[string]string)}
+	router.HandleFunc("/config/", pm.CountCreateConfig(server.createPostHandler)).Methods("POST")
+	router.HandleFunc("/configs/", pm.CountGetAllConfig(server.getAllHandler)).Methods("GET")
+	router.HandleFunc("/config/{id}/{version}/", pm.CountGetConfig(server.getPostHandler)).Methods("GET")
+	router.HandleFunc("/config/{id}/{version}/", pm.CountDelConfig(server.delPostHandler)).Methods("DELETE")
+	router.HandleFunc("/config/{id}/{version}/{labels}", pm.CountGetConfigByLabels(server.getPostByLabel)).Methods("GET")
 
-	router.HandleFunc("/configGroup/", server.createConfigGroupHandler).Methods("POST")
-	router.HandleFunc("/configGroups/", server.getAllConfigGroupHandlers).Methods("GET")
-	router.HandleFunc("/configGroup/{id}/", server.getConfigGroupHandler).Methods("GET")
-	router.HandleFunc("/configGroup/{id}/", server.delConfigGroupHandler).Methods("DELETE")
-	router.HandleFunc("/configGroup/{id}/{version}/{configGroup}/", server.addConfigInConfigGroup).Methods("GET")
+	router.HandleFunc("/configGroup/", pm.CountCreateGroup(server.createConfigGroupHandler)).Methods("POST")
+	router.HandleFunc("/configGroups/", pm.CountGetAllGroup(server.getAllConfigGroupHandlers)).Methods("GET")
+	router.HandleFunc("/configGroup/{id}/", pm.CountGetGroup(server.getConfigGroupHandler)).Methods("GET")
+	router.HandleFunc("/configGroup/{id}/", pm.CountDelGroup(server.delConfigGroupHandler)).Methods("DELETE")
+	router.HandleFunc("/configGroup/{id}/{version}/{configGroup}/", pm.CountAppendGroup(server.addConfigInConfigGroup)).Methods("GET")
 
 	router.HandleFunc("/swagger.yaml", server.swaggerHandler).Methods("GET")
+
+	router.Path("/metrics").Handler(pm.MetricsHandler())
+
+	//show Traces UI on http://localhost:16686
+	//show Metrics UI on show UI on localhost:9090
 
 	// SwaggerUI
 	optionsDevelopers := middleware.SwaggerUIOpts{SpecURL: "swagger.yaml"}
