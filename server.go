@@ -1,28 +1,27 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
-	tracer "github.com/MihajloJankovic/Alati/tracer"
+	//tracer "github.com/MihajloJankovic/Alati/tracer"
+	"github.com/gorilla/mux"
 	opentracing "github.com/opentracing/opentracing-go"
 	"io"
-	"github.com/gorilla/mux"
 	"mime"
 	"net/http"
 )
 
 type postServer struct {
-
 	keys  map[string]string
 	keys2 map[string]string
 
-	Dao  *ps.Dao
-	Dao2 *pss.Dao2
+	Dao    *ps.Dao
+	Dao2   *pss.Dao2
 	tracer opentracing.Tracer
 	closer io.Closer
-
 }
 
 // swagger:route POST /config/ config createConfig
@@ -33,7 +32,7 @@ type postServer struct {
 //	415: ErrorResponse
 //	400: ErrorResponse
 //	201: ResponsePost
-func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) createPostHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
 	key := req.Header.Get("key")
 	mediatype, _, err := mime.ParseMediaType(contentType)
@@ -56,17 +55,17 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	rt, err := decodeBody(req.Body)
+	rt, err := decodeBody(ctx, req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusAccepted)
 		return
 	}
-	config, err := ts.Dao.Create(rt)
+	config, err := ts.Dao.Create(ctx, rt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, config)
+	renderJSON(ctx, w, config)
 
 }
 
@@ -76,13 +75,13 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 // responses:
 //
 //	200: []ResponsePost
-func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
-	configs, err := ts.Dao.GetAll()
+func (ts *postServer) getAllHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	configs, err := ts.Dao.GetAll(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, configs)
+	renderJSON(ctx, w, configs)
 }
 
 // swagger:route GET /config/{id}/{version}/ config getConfigById
@@ -92,15 +91,15 @@ func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
 //
 //	404: ErrorResponse
 //	200: ResponsePost
-func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getPostHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-	config, err := ts.Dao.Get(id, version)
+	config, err := ts.Dao.Get(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, config)
+	renderJSON(ctx, w, config)
 }
 
 // swagger:route DELETE /config/{id}/{version}/ config deleteConfig
@@ -110,28 +109,28 @@ func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 //
 //	404: ErrorResponse
 //	204: NoContentResponse
-func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) delPostHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-	msg, err := ts.Dao.Delete(id, version)
+	msg, err := ts.Dao.Delete(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, msg)
+	renderJSON(ctx, w, msg)
 
 }
-func (ts *postServer) getPostByLabel(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getPostByLabel(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	labels := mux.Vars(req)["labels"]
 
-	task, err := ts.Dao.GetPostsByLabels(id, version, labels)
+	task, err := ts.Dao.GetPostsByLabels(ctx, id, version, labels)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, task)
+	renderJSON(ctx, w, task)
 }
 
 // swagger:route POST /configGroup/ configGroup createConfigGroup
@@ -142,7 +141,7 @@ func (ts *postServer) getPostByLabel(w http.ResponseWriter, req *http.Request) {
 //	415: ErrorResponse
 //	400: ErrorResponse
 //	201: ResponsePost
-func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) createConfigGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
@@ -164,18 +163,18 @@ func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.
 		http.Error(w, "Already Created", http.StatusAccepted)
 		return
 	}
-	rt, err := decodeGroupBody(req.Body)
+	rt, err := decodeGroupBody(ctx, req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	group, err := ts.Dao2.CreateGroup(rt)
+	group, err := ts.Dao2.CreateGroup(ctx, rt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, group)
+	renderJSON(ctx, w, group)
 }
 
 // swagger:route GET /configGroups/ configGroup getConfigGroups
@@ -184,13 +183,13 @@ func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.
 // responses:
 //
 //	200: []ResponsePost
-func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http.Request) {
-	allTasks, err := ts.Dao2.GetAllGroups()
+func (ts *postServer) getAllConfigGroupHandlers(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	allTasks, err := ts.Dao2.GetAllGroups(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, allTasks)
+	renderJSON(ctx, w, allTasks)
 }
 
 // swagger:route GET /configGroup/{id}/ configGroup getConfigGroupById
@@ -200,15 +199,15 @@ func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http
 //
 //	404: ErrorResponse
 //	200: ResponsePost
-func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getConfigGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
-	task, err := ts.Dao2.GetGroup(id)
+	task, err := ts.Dao2.GetGroup(ctx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	renderJSON(w, task)
+	renderJSON(ctx, w, task)
 }
 
 // swagger:route DELETE /configGroup/{id}/ configGroup deleteConfigGroup
@@ -218,15 +217,15 @@ func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Req
 //
 //	404: ErrorResponse
 //	204: NoContentResponse
-func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) delConfigGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-	msg, err := ts.Dao2.DeleteGroup(id, version)
+	msg, err := ts.Dao2.DeleteGroup(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, msg)
+	renderJSON(ctx, w, msg)
 }
 
 // swagger:route GET /configGroup/{id}/{version}/{configGroup}/ config, configGroup addConfigInConfigGroup
@@ -237,31 +236,31 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 //	415: ErrorResponse
 //	400: ErrorResponse
 //	201: ResponsePost
-func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) addConfigInConfigGroup(ctx context.Context, w http.ResponseWriter, req *http.Request) {
 
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	configGroup := mux.Vars(req)["configGroup"]
 
-	config, err := ts.Dao.Get(id, version)
+	config, err := ts.Dao.Get(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	task, err := ts.Dao2.GetGroup(configGroup)
+	task, err := ts.Dao2.GetGroup(ctx, configGroup)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	task.Configs = append(task.Configs, config)
 	fmt.Println(task.Configs)
-	grupas, err := ts.Dao2.SaveGroup(task)
+	grupas, err := ts.Dao2.SaveGroup(ctx, task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, grupas)
+	renderJSON(ctx, w, grupas)
 
 }
 

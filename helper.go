@@ -2,32 +2,17 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/MihajloJankovic/Alati/Dao"
+	//	ps "github.com/MihajloJankovic/Alati/Dao"
 	"io"
 	"net/http"
-	ps "github.com/MihajloJankovic/Alati/Dao"
-	pss "github.com/MihajloJankovic/Alati/Dao2"
+	//pss "github.com/MihajloJankovic/Alati/Dao2"
 	tracer "github.com/MihajloJankovic/Alati/tracer"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/google/uuid"
+	opentracing "github.com/opentracing/opentracing-go"
 )
-
-func NewConfigServer() (*postServer, error) {
-	store, err := ps.New()
-	if err != nil {
-		return nil, err
-	}
-
-	tracer, closer := tracer.Init(name)
-	opentracing.SetGlobalTracer(tracer)
-	return &postServer{
-		store:  store,
-		Keys:   make(map[string]string),
-		tracer: tracer,
-		closer: closer,
-	}, nil
-}
 
 func (s *postServer) GetTracer() opentracing.Tracer {
 	return s.tracer
@@ -57,7 +42,7 @@ func decodeBody(ctx context.Context, r io.Reader) (*Dao.Config, error) {
 	dec.DisallowUnknownFields()
 
 	var rt Dao.Config
-	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
+	if err := json.Unmarshal(StreamToByte(ctx, r), &rt); err != nil {
 		tracer.LogError(span, err)
 		return nil, err
 	}
@@ -72,7 +57,7 @@ func decodeGroupBody(ctx context.Context, r io.Reader) (*Dao.ConfigGroup, error)
 	dec.DisallowUnknownFields()
 
 	var rt Dao.ConfigGroup
-	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
+	if err := json.Unmarshal(StreamToByte(ctx, r), &rt); err != nil {
 		tracer.LogError(span, err)
 		return nil, err
 	}

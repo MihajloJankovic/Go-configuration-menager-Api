@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"context"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
@@ -124,97 +125,97 @@ func MetricsHandler() http.Handler {
 	return promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})
 }
 
-func Count(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func Count(f func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountCreateConfig(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountCreateConfig(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		createConfigHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountGetAllConfig(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountGetAllConfig(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		getAllConfigHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountGetConfig(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountGetConfig(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		getConfigHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountDelConfig(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountDelConfig(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		delConfigHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountCreateGroup(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountCreateGroup(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		createGroupHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountGetAllGroup(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountGetAllGroup(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		getAllGroupHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountGetGroup(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountGetGroup(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		getGroupHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountDelGroup(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountDelGroup(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		delGroupHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountAppendGroup(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountAppendGroup(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		appendGroupHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountGetConfigByLabels(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountGetConfigByLabels(f func(ctx context.Context, w http.ResponseWriter, req *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		getConfigByLabelsHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
 
-func CountDelConfigByLabels(f func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func CountDelConfigByLabels(f func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		httpHits.Inc()
 		delConfigByLabelsHits.Inc()
-		f(w, r) // original function call
+		f(ctx, w, r) // original function call
 	}
 }
