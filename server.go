@@ -32,11 +32,19 @@ type postServer struct {
 //	415: ErrorResponse
 //	400: ErrorResponse
 //	201: ResponsePost
-func (ts *postServer) createPostHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("createPostHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Create config at %s\n", req.URL.Path)),
+	)
+
 	contentType := req.Header.Get("Content-Type")
 	key := req.Header.Get("key")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
+		tracer.LogError(span, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -55,6 +63,7 @@ func (ts *postServer) createPostHandler(ctx context.Context, w http.ResponseWrit
 		return
 	}
 
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 	rt, err := decodeBody(ctx, req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusAccepted)
@@ -75,7 +84,16 @@ func (ts *postServer) createPostHandler(ctx context.Context, w http.ResponseWrit
 // responses:
 //
 //	200: []ResponsePost
-func (ts *postServer) getAllHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getAllHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get all configs at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
 	configs, err := ts.Dao.GetAll(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -91,7 +109,16 @@ func (ts *postServer) getAllHandler(ctx context.Context, w http.ResponseWriter, 
 //
 //	404: ErrorResponse
 //	200: ResponsePost
-func (ts *postServer) getPostHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getPostHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get config by ID at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	config, err := ts.Dao.Get(ctx, id, version)
@@ -109,7 +136,15 @@ func (ts *postServer) getPostHandler(ctx context.Context, w http.ResponseWriter,
 //
 //	404: ErrorResponse
 //	204: NoContentResponse
-func (ts *postServer) delPostHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("delPostHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Delete config at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	msg, err := ts.Dao.Delete(ctx, id, version)
@@ -120,7 +155,15 @@ func (ts *postServer) delPostHandler(ctx context.Context, w http.ResponseWriter,
 	renderJSON(ctx, w, msg)
 
 }
-func (ts *postServer) getPostByLabel(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getPostByLabel(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getPostByLabel", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get post by label at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	labels := mux.Vars(req)["labels"]
@@ -141,10 +184,18 @@ func (ts *postServer) getPostByLabel(ctx context.Context, w http.ResponseWriter,
 //	415: ErrorResponse
 //	400: ErrorResponse
 //	201: ResponsePost
-func (ts *postServer) createConfigGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("createConfigGroupHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Create config group at %s\n", req.URL.Path)),
+	)
+
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
+		tracer.LogError(span, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -163,6 +214,7 @@ func (ts *postServer) createConfigGroupHandler(ctx context.Context, w http.Respo
 		http.Error(w, "Already Created", http.StatusAccepted)
 		return
 	}
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 	rt, err := decodeGroupBody(ctx, req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -183,7 +235,14 @@ func (ts *postServer) createConfigGroupHandler(ctx context.Context, w http.Respo
 // responses:
 //
 //	200: []ResponsePost
-func (ts *postServer) getAllConfigGroupHandlers(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getAllConfigGroupHandlers", ts.tracer, req)
+	defer span.Finish()
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get all config groups at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 	allTasks, err := ts.Dao2.GetAllGroups(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -199,7 +258,16 @@ func (ts *postServer) getAllConfigGroupHandlers(ctx context.Context, w http.Resp
 //
 //	404: ErrorResponse
 //	200: ResponsePost
-func (ts *postServer) getConfigGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getConfigGroupHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get config group by ID at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
 	id := mux.Vars(req)["id"]
 	task, err := ts.Dao2.GetGroup(ctx, id)
 	if err != nil {
@@ -217,7 +285,16 @@ func (ts *postServer) getConfigGroupHandler(ctx context.Context, w http.Response
 //
 //	404: ErrorResponse
 //	204: NoContentResponse
-func (ts *postServer) delConfigGroupHandler(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("delConfigGroupHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Delete config group at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	msg, err := ts.Dao2.DeleteGroup(ctx, id, version)
@@ -237,6 +314,14 @@ func (ts *postServer) delConfigGroupHandler(ctx context.Context, w http.Response
 //	400: ErrorResponse
 //	201: ResponsePost
 func (ts *postServer) addConfigInConfigGroup(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("addConfigInConfigGroup", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Add config in config group at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
