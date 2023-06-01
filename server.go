@@ -6,6 +6,8 @@ import (
 	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
+	tracer "github.com/MihajloJankovic/Alati/tracer"
+
 	//tracer "github.com/MihajloJankovic/Alati/tracer"
 	"github.com/gorilla/mux"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -313,7 +315,7 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 //	415: ErrorResponse
 //	400: ErrorResponse
 //	201: ResponsePost
-func (ts *postServer) addConfigInConfigGroup(ctx context.Context, w http.ResponseWriter, req *http.Request) {
+func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
 	span := tracer.StartSpanFromRequest("addConfigInConfigGroup", ts.tracer, req)
 	defer span.Finish()
 
