@@ -1,28 +1,28 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
 	tracer "github.com/MihajloJankovic/Alati/tracer"
+
+	"github.com/gorilla/mux"
 	opentracing "github.com/opentracing/opentracing-go"
 	"io"
-	"github.com/gorilla/mux"
 	"mime"
 	"net/http"
 )
 
 type postServer struct {
-
 	keys  map[string]string
 	keys2 map[string]string
 
-	Dao  *ps.Dao
-	Dao2 *pss.Dao2
+	Dao    *ps.Dao
+	Dao2   *pss.Dao2
 	tracer opentracing.Tracer
 	closer io.Closer
-
 }
 
 // swagger:route POST /config/ config createConfig
@@ -34,10 +34,18 @@ type postServer struct {
 //	400: ErrorResponse
 //	201: ResponsePost
 func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("createPostHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Create config at %s\n", req.URL.Path)),
+	)
+
 	contentType := req.Header.Get("Content-Type")
 	key := req.Header.Get("key")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
+		tracer.LogError(span, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -56,17 +64,18 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	rt, err := decodeBody(req.Body)
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+	rt, err := decodeBody(ctx, req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusAccepted)
 		return
 	}
-	config, err := ts.Dao.Create(rt)
+	config, err := ts.Dao.Create(ctx, rt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, config)
+	renderJSON(ctx, w, config)
 
 }
 
@@ -77,12 +86,21 @@ func (ts *postServer) createPostHandler(w http.ResponseWriter, req *http.Request
 //
 //	200: []ResponsePost
 func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
-	configs, err := ts.Dao.GetAll()
+	span := tracer.StartSpanFromRequest("getAllHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get all configs at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
+	configs, err := ts.Dao.GetAll(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, configs)
+	renderJSON(ctx, w, configs)
 }
 
 // swagger:route GET /config/{id}/{version}/ config getConfigById
@@ -93,14 +111,23 @@ func (ts *postServer) getAllHandler(w http.ResponseWriter, req *http.Request) {
 //	404: ErrorResponse
 //	200: ResponsePost
 func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getPostHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get config by ID at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-	config, err := ts.Dao.Get(id, version)
+	config, err := ts.Dao.Get(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, config)
+	renderJSON(ctx, w, config)
 }
 
 // swagger:route DELETE /config/{id}/{version}/ config deleteConfig
@@ -111,27 +138,43 @@ func (ts *postServer) getPostHandler(w http.ResponseWriter, req *http.Request) {
 //	404: ErrorResponse
 //	204: NoContentResponse
 func (ts *postServer) delPostHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("delPostHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Delete config at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-	msg, err := ts.Dao.Delete(id, version)
+	msg, err := ts.Dao.Delete(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, msg)
+	renderJSON(ctx, w, msg)
 
 }
 func (ts *postServer) getPostByLabel(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getPostByLabel", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get post by label at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	labels := mux.Vars(req)["labels"]
 
-	task, err := ts.Dao.GetPostsByLabels(id, version, labels)
+	task, err := ts.Dao.GetPostsByLabels(ctx, id, version, labels)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, task)
+	renderJSON(ctx, w, task)
 }
 
 // swagger:route POST /configGroup/ configGroup createConfigGroup
@@ -143,9 +186,17 @@ func (ts *postServer) getPostByLabel(w http.ResponseWriter, req *http.Request) {
 //	400: ErrorResponse
 //	201: ResponsePost
 func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("createConfigGroupHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Create config group at %s\n", req.URL.Path)),
+	)
+
 	contentType := req.Header.Get("Content-Type")
 	mediatype, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
+		tracer.LogError(span, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -164,18 +215,19 @@ func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.
 		http.Error(w, "Already Created", http.StatusAccepted)
 		return
 	}
-	rt, err := decodeGroupBody(req.Body)
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+	rt, err := decodeGroupBody(ctx, req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	group, err := ts.Dao2.CreateGroup(rt)
+	group, err := ts.Dao2.CreateGroup(ctx, rt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, group)
+	renderJSON(ctx, w, group)
 }
 
 // swagger:route GET /configGroups/ configGroup getConfigGroups
@@ -185,12 +237,19 @@ func (ts *postServer) createConfigGroupHandler(w http.ResponseWriter, req *http.
 //
 //	200: []ResponsePost
 func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http.Request) {
-	allTasks, err := ts.Dao2.GetAllGroups()
+	span := tracer.StartSpanFromRequest("getAllConfigGroupHandlers", ts.tracer, req)
+	defer span.Finish()
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get all config groups at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+	allTasks, err := ts.Dao2.GetAllGroups(ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, allTasks)
+	renderJSON(ctx, w, allTasks)
 }
 
 // swagger:route GET /configGroup/{id}/ configGroup getConfigGroupById
@@ -201,14 +260,23 @@ func (ts *postServer) getAllConfigGroupHandlers(w http.ResponseWriter, req *http
 //	404: ErrorResponse
 //	200: ResponsePost
 func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("getConfigGroupHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Get config group by ID at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
 	id := mux.Vars(req)["id"]
-	task, err := ts.Dao2.GetGroup(id)
+	task, err := ts.Dao2.GetGroup(ctx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	renderJSON(w, task)
+	renderJSON(ctx, w, task)
 }
 
 // swagger:route DELETE /configGroup/{id}/ configGroup deleteConfigGroup
@@ -219,14 +287,23 @@ func (ts *postServer) getConfigGroupHandler(w http.ResponseWriter, req *http.Req
 //	404: ErrorResponse
 //	204: NoContentResponse
 func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("delConfigGroupHandler", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Delete config group at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
+
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
-	msg, err := ts.Dao2.DeleteGroup(id, version)
+	msg, err := ts.Dao2.DeleteGroup(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, msg)
+	renderJSON(ctx, w, msg)
 }
 
 // swagger:route GET /configGroup/{id}/{version}/{configGroup}/ config, configGroup addConfigInConfigGroup
@@ -238,30 +315,38 @@ func (ts *postServer) delConfigGroupHandler(w http.ResponseWriter, req *http.Req
 //	400: ErrorResponse
 //	201: ResponsePost
 func (ts *postServer) addConfigInConfigGroup(w http.ResponseWriter, req *http.Request) {
+	span := tracer.StartSpanFromRequest("addConfigInConfigGroup", ts.tracer, req)
+	defer span.Finish()
+
+	span.LogFields(
+		tracer.LogString("handler", fmt.Sprintf("Add config in config group at %s\n", req.URL.Path)),
+	)
+
+	ctx := tracer.ContextWithSpan(context.Background(), span)
 
 	id := mux.Vars(req)["id"]
 	version := mux.Vars(req)["version"]
 	configGroup := mux.Vars(req)["configGroup"]
 
-	config, err := ts.Dao.Get(id, version)
+	config, err := ts.Dao.Get(ctx, id, version)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	task, err := ts.Dao2.GetGroup(configGroup)
+	task, err := ts.Dao2.GetGroup(ctx, configGroup)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	task.Configs = append(task.Configs, config)
 	fmt.Println(task.Configs)
-	grupas, err := ts.Dao2.SaveGroup(task)
+	grupas, err := ts.Dao2.SaveGroup(ctx, task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	renderJSON(w, grupas)
+	renderJSON(ctx, w, grupas)
 
 }
 

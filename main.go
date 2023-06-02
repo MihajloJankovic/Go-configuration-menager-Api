@@ -17,8 +17,10 @@ import (
 	ps "github.com/MihajloJankovic/Alati/Dao"
 	pss "github.com/MihajloJankovic/Alati/Dao2"
 	pm "github.com/MihajloJankovic/Alati/prometheus"
+	tracer "github.com/MihajloJankovic/Alati/tracer"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
+	"github.com/opentracing/opentracing-go"
 	"log"
 	"net/http"
 	"os"
@@ -41,8 +43,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	const (
+		name = "config_service"
+	)
+	tracer1, _ := tracer.Init(name)
+	opentracing.SetGlobalTracer(tracer1)
 
-	server := postServer{Dao: Dao, Dao2: Dao2, keys: make(map[string]string), keys2: make(map[string]string)}
+	server := postServer{Dao: Dao, Dao2: Dao2, keys: make(map[string]string), keys2: make(map[string]string), tracer: tracer1}
 	router.HandleFunc("/config/", pm.CountCreateConfig(server.createPostHandler)).Methods("POST")
 	router.HandleFunc("/configs/", pm.CountGetAllConfig(server.getAllHandler)).Methods("GET")
 	router.HandleFunc("/config/{id}/{version}/", pm.CountGetConfig(server.getPostHandler)).Methods("GET")

@@ -22,26 +22,11 @@ func Init(service string) (opentracing.Tracer, io.Closer) {
 		return nil, nil
 	}
 
-	cfg.ServiceName = "posts"
+	cfg.ServiceName = service
 	cfg.Sampler.Type = jaeger.SamplerTypeConst
 	cfg.Sampler.Param = 1
 	cfg.Reporter.LogSpans = true
 
-	//Without docker, easier to test
-	// cfg := &config.Configuration{
-	// 	ServiceName: service,
-
-	// 	// "const" sampler is a binary sampling strategy: 0=never sample, 1=always sample.
-	// 	Sampler: &config.SamplerConfig{
-	// 		Type:  jaeger.SamplerTypeConst,
-	// 		Param: 1,
-	// 	},
-
-	// 	// Log the emitted spans to stdout.
-	// 	Reporter: &config.ReporterConfig{
-	// 		LogSpans: true,
-	// 	},
-	// }
 	jLogger := jaegerlog.StdLogger
 	jMetricsFactory := metrics.NullFactory
 	tracer, closer, err := cfg.NewTracer(

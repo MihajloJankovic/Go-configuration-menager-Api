@@ -2,13 +2,29 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/MihajloJankovic/Alati/Dao"
+	//	ps "github.com/MihajloJankovic/Alati/Dao"
 	"io"
 	"net/http"
-
+	//pss "github.com/MihajloJankovic/Alati/Dao2"
+	tracer "github.com/MihajloJankovic/Alati/tracer"
 	"github.com/google/uuid"
+	opentracing "github.com/opentracing/opentracing-go"
 )
+
+func (s *postServer) GetTracer() opentracing.Tracer {
+	return s.tracer
+}
+
+func (s *postServer) GetCloser() io.Closer {
+	return s.closer
+}
+
+func (s *postServer) CloseTracer() error {
+	return s.closer.Close()
+}
 
 func StreamToByte(ctx context.Context, stream io.Reader) []byte {
 	span := tracer.StartSpanFromContext(ctx, "StreamToByte")
@@ -26,7 +42,7 @@ func decodeBody(ctx context.Context, r io.Reader) (*Dao.Config, error) {
 	dec.DisallowUnknownFields()
 
 	var rt Dao.Config
-	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
+	if err := json.Unmarshal(StreamToByte(ctx, r), &rt); err != nil {
 		tracer.LogError(span, err)
 		return nil, err
 	}
@@ -41,7 +57,7 @@ func decodeGroupBody(ctx context.Context, r io.Reader) (*Dao.ConfigGroup, error)
 	dec.DisallowUnknownFields()
 
 	var rt Dao.ConfigGroup
-	if err := json.Unmarshal(StreamToByte(r), &rt); err != nil {
+	if err := json.Unmarshal(StreamToByte(ctx, r), &rt); err != nil {
 		tracer.LogError(span, err)
 		return nil, err
 	}

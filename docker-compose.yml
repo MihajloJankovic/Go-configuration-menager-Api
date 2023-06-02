@@ -9,8 +9,7 @@ services:
     command: "agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0"
     volumes:
       - ~/volumes:/consul/data
-    
-    tracing:
+  tracing:
     image: jaegertracing/all-in-one
     container_name: jaeger
     ports:
@@ -34,8 +33,8 @@ services:
       - JAEGER_AGENT_PORT=6831     
       - JAEGER_SAMPLER_MANAGER_HOST_PORT=jaeger:5778
       - JAEGER_SAMPLER_TYPE=const
-      - JAEGER_SAMPLER_PARAM=1
-    
+      - JAEGER_SAMPLER_PARAM=1  
+   
   prometheus:
     image: prom/prometheus:latest
     ports:
