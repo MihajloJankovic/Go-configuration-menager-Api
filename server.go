@@ -8,7 +8,6 @@ import (
 	pss "github.com/MihajloJankovic/Alati/Dao2"
 	tracer "github.com/MihajloJankovic/Alati/tracer"
 
-	//tracer "github.com/MihajloJankovic/Alati/tracer"
 	"github.com/gorilla/mux"
 	opentracing "github.com/opentracing/opentracing-go"
 	"io"
