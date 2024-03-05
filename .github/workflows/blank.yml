@@ -36,7 +36,6 @@ jobs:
           echo test, and deploy your project.
                   - name: Publish Release GitHub
                   - name: Release build
-      - name: Release build
        
       - name: Build Go from source
         uses: iwdgo/gotip-build@v0.5.0
